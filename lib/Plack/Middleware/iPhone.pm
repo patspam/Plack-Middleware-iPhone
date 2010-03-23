@@ -6,7 +6,15 @@ use parent qw( Plack::Middleware );
 use Plack::Util::Accessor qw( manifest icon startup_image tidy viewport statusbar );
 
 our $VERSION = '0.01';
-our $MANIFEST;
+
+sub new {
+    my $class = shift;
+    my $self = $class->SUPER::new(@_);
+    
+    $self->write_manifest if $self->manifest;
+
+    return $self;
+}
 
 sub call {
     my $self = shift;
@@ -33,8 +41,8 @@ sub filter {
     $dom->write($chunk);
     $dom->close;
     
-    if ($self->manifest) {
-        $dom->documentElement->setAttribute('manifest', $MANIFEST);
+    if (my $manifest = $self->manifest) {
+        $dom->documentElement->setAttribute('manifest', $manifest);
     }
     
     my $head = $dom->getElementsByTagName('head')->[0];
@@ -83,19 +91,21 @@ sub el {
     return $el;
 }
 
-BEGIN {
-    use Digest::MD5;
-    use File::Slurp;
-    use autodie;
-    $MANIFEST = 'app.manifest'; 
+sub write_manifest {
+    my $self = shift;
+    
+    require Digest::MD5;
+    require File::Slurp;
+    my $manifest = $self->manifest;
     
     # Write the manifest once, at compile time
-    open my $fh, '>', $MANIFEST;
+    open my $fh, '>', $manifest or die "Unable to write manifest $manifest. $!";
     $fh->print("CACHE MANIFEST\n");
     for my $file (<*.*>) {
         # Don't put manifest or app.psgi in manifest file
-        next if $file eq $MANIFEST or $file eq __FILE__;
+        next if $file eq $manifest or $file eq __FILE__;
         
+        # Write MD5 hash so that manifest changes whenever files change (auto cache updating)
         $fh->print("$file #");
         $fh->print(Digest::MD5::md5_hex(File::Slurp::read_file($file)) . "\n");
     }
@@ -123,7 +133,7 @@ Plack::Middleware::iPhone - Make your html more iPhone friendly
   builder {
     enable "iPhone",
         tidy => 1,
-        manifest => 1,
+        manifest => 'app.manifest',
         viewport => 'initial-scale = 1, maximum-scale = 1.5, width = device-width',
         statusbar => 'black-translucent',
         startup_image => 'loading.png';
@@ -133,7 +143,7 @@ Plack::Middleware::iPhone - Make your html more iPhone friendly
 
 =head1 DESCRIPTION
 
-Plack::Middleware::iPhone does some silly rewriting of any html content returned by your app (mostly just the head block) 
+Plack::Middleware::iPhone does some on the fly rewriting of any html content returned by your app (mostly just the head block) 
 to make it play nicer with iPhones. This is just a toy, for real 
 L<HTML5|http://www.quirksmode.org/blog/archives/2010/03/html5_apps.html>
 mobile web apps you should be writing the HTML yourself.
@@ -187,11 +197,8 @@ for more information.
 
 =head3 manifest
 
-Plack::Middleware::iPhone automatically generates a manifest file for your application (called C<app.manifest>) once, 
-at compile time. This currently cannot be disabled.
-
-The manifest is only actually used if you set this option, which causes the C<manifest> attribute to be set on your html tag, 
-thus triggering your iPhone to enable offline caching.
+Automatically generates a manifest file for your application (with whatever name you pass in), and sets the 
+C<manifest> attribute on the html root tag, which triggers your iPhone to start using offline HTML Web App caching.
 
 See L<Going Offline|http://building-iphone-apps.labs.oreilly.com/ch06.html> for more information
 

@@ -20,7 +20,6 @@ my $wrapped = builder {
     enable "iPhone", 
         icon => 'icon.png',
         tidy => 1,
-        manifest => 1,
         startup_image => 'loading.png';
     $app;
 };
@@ -32,7 +31,7 @@ test_psgi $wrapped, sub {
     is $res->content, <<HTML;
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
 
-<html manifest="app.manifest">
+<html>
 <head>
   <meta content="width = device-width" name="viewport">
   <meta content="yes" name="apple-mobile-web-app-capable">

@@ -11,7 +11,6 @@ build_requires 'Test::More';
 requires Plack;
 requires 'Digest::MD5';
 requires 'File::Slurp';
-requires autodie;
 requires 'HTML::DOM';
 requires 'HTML::Tidy';
 

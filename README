@@ -14,7 +14,7 @@ SYNOPSIS
       builder {
         enable "iPhone",
             tidy => 1,
-            manifest => 1,
+            manifest => 'app.manifest',
             viewport => 'initial-scale = 1, maximum-scale = 1.5, width = device-width',
             statusbar => 'black-translucent',
             startup_image => 'loading.png';
@@ -23,10 +23,10 @@ SYNOPSIS
       }
 
 DESCRIPTION
-    Plack::Middleware::iPhone does some silly rewriting of any html content
-    returned by your app (mostly just the head block) to make it play nicer
-    with iPhones. This is just a toy, for real <HTML5> mobile web apps you
-    should be writing the HTML yourself.
+    Plack::Middleware::iPhone does some on the fly rewriting of any html
+    content returned by your app (mostly just the head block) to make it
+    play nicer with iPhones. This is just a toy, for real <HTML5> mobile web
+    apps you should be writing the HTML yourself.
 
 SEE ALSO
     <Building iPhone Apps with HTML, CSS, and JavaScript>, Jonathan Stark
@@ -63,13 +63,10 @@ SEE ALSO
     See <Configuring the Viewport> for more information.
 
    manifest
-    Plack::Middleware::iPhone automatically generates a manifest file for
-    your application (called "app.manifest") once, at compile time. This
-    currently cannot be disabled.
-
-    The manifest is only actually used if you set this option, which causes
-    the "manifest" attribute to be set on your html tag, thus triggering
-    your iPhone to enable offline caching.
+    Automatically generates a manifest file for your application (with
+    whatever name you pass in), and sets the "manifest" attribute on the
+    html root tag, which triggers your iPhone to start using offline HTML
+    Web App caching.
 
     See <Going Offline> for more information
 

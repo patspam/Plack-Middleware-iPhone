@@ -18,16 +18,25 @@ sub new {
 
 sub call {
     my $self = shift;
-
-    my $res = $self->app->(@_);
+    my $env = shift;
+    my $res = $self->app->($env);
+    
+    # Buffer the entire html response (surely there's a better way..)
+    my $whole_response = '';
+    
     $self->response_cb($res, sub {
         my $res = shift;
         my $h = Plack::Util::headers($res->[1]);
+        
         if ($h->get('Content-Type') =~ m!^text/html!) {
             return sub {
                 my $chunk = shift;
                 return unless defined $chunk;
-                return $self->filter($chunk);
+                
+                $whole_response .= $chunk;
+                if ($chunk =~ m{</html>}i) {
+                    return $self->filter($whole_response);
+                }
             };
         }
     });
@@ -103,7 +112,7 @@ sub write_manifest {
     $fh->print("CACHE MANIFEST\n");
     for my $file (<*.*>) {
         # Don't put manifest or app.psgi in manifest file
-        next if $file eq $manifest or $file eq __FILE__;
+        next if $file eq $manifest or $file =~ m/\.psgi$/;
         
         # Write MD5 hash so that manifest changes whenever files change (auto cache updating)
         $fh->print("$file #");
@@ -122,29 +131,30 @@ Plack::Middleware::iPhone - Make your html more iPhone friendly
 =head1 SYNOPSIS
 
   # iPhone compatible directory listing..
-  use Plack::Builder;
-  use Plack::App::Directory;
-  builder {
-      enable 'iPhone';
-      Plack::App::Directory->new;
-  }
+  plackup -MPlack::App::Directory -e 'builder { enable iPhone; Plack::App::Directory->new }'
   
-  # or with some options..
+  # m.search.CPAN.org
+  plackup -MPlack::App::Proxy -e 'builder {enable iPhone; Plack::App::Proxy->new(remote => "http://search.cpan.org/") }'
+  
+  # Or in your app.psgi
+  use Plack::Builder;
   builder {
     enable "iPhone",
         tidy => 1,
         manifest => 'app.manifest',
         viewport => 'initial-scale = 1, maximum-scale = 1.5, width = device-width',
         statusbar => 'black-translucent',
-        startup_image => 'loading.png';
-        icon => 'icon.png',
+        startup_image => 'loading.png',
+        icon => 'icon.png';
     $app;
   }
 
 =head1 DESCRIPTION
 
-Plack::Middleware::iPhone does some on the fly rewriting of any html content returned by your app (mostly just the head block) 
-to make it play nicer with iPhones. This is just a toy, for real 
+Plack::Middleware::iPhone does on-the-fly rewriting of any html content returned by your app (mostly just the head block) 
+to make it play nicer with iPhones. 
+
+This is a borderline ACME movile. For real 
 L<HTML5|http://www.quirksmode.org/blog/archives/2010/03/html5_apps.html>
 mobile web apps you should be writing the HTML yourself.
 
@@ -219,7 +229,6 @@ under the terms of either: the GNU General Public License as published
 by the Free Software Foundation; or the Artistic License.
 
 See http://dev.perl.org/licenses/ for more information.
-
 
 =cut
 

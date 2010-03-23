@@ -1,0 +1,90 @@
+NAME
+    Plack::Middleware::iPhone - Make your html more iPhone friendly
+
+SYNOPSIS
+      # iPhone compatible directory listing..
+      use Plack::Builder;
+      use Plack::App::Directory;
+      builder {
+          enable 'iPhone';
+          Plack::App::Directory->new;
+      }
+  
+      # or with some options..
+      builder {
+        enable "iPhone",
+            tidy => 1,
+            manifest => 1,
+            viewport => 'initial-scale = 1, maximum-scale = 1.5, width = device-width',
+            statusbar => 'black-translucent',
+            startup_image => 'loading.png';
+            icon => 'icon.png',
+        $app;
+      }
+
+DESCRIPTION
+    Plack::Middleware::iPhone does some silly rewriting of any html content
+    returned by your app (mostly just the head block) to make it play nicer
+    with iPhones. This is just a toy, for real <HTML5> mobile web apps you
+    should be writing the HTML yourself.
+
+SEE ALSO
+    <Building iPhone Apps with HTML, CSS, and JavaScript>, Jonathan Stark
+    (freely available).
+
+  OPTIONS
+   icon
+    A 57x57 image icon that the iPhone will display as a shortcut to your
+    app if you add it to your Home Screen via the "Add to Home Screen"
+    function.
+
+   startup_image
+    A 320x460 PNG image that is displayed while your app is loading. If this
+    is not set, the iPhone automatically uses a screenshot of the most
+    recent app state.
+
+   statusbar
+    Sets the "apple-mobile-web-app-status-bar-style" meta tag, which
+    controls the status bar appearance when yourself app is launched from a
+    Home icon shortcut.
+
+    Valid options are:
+
+    *   gray (default)
+
+    *   black
+
+    *   black-translucent
+
+   viewport
+    Sets the viewport meta tag, which determines how wide your iPhone thinks
+    the screen is and scaling options.
+
+    See <Configuring the Viewport> for more information.
+
+   manifest
+    Plack::Middleware::iPhone automatically generates a manifest file for
+    your application (called "app.manifest") once, at compile time. This
+    currently cannot be disabled.
+
+    The manifest is only actually used if you set this option, which causes
+    the "manifest" attribute to be set on your html tag, thus triggering
+    your iPhone to enable offline caching.
+
+    See <Going Offline> for more information
+
+   tidy
+    Run the HTML through HTML::Tidy
+
+AUTHOR
+    Patrick Donelan, "<pat at patspam.com>"
+
+LICENSE AND COPYRIGHT
+    Copyright 2010 Patrick Donelan.
+
+    This program is free software; you can redistribute it and/or modify it
+    under the terms of either: the GNU General Public License as published
+    by the Free Software Foundation; or the Artistic License.
+
+    See http://dev.perl.org/licenses/ for more information.
+

@@ -1,9 +1,12 @@
 Revision history for Plack-Middleware-iPhone
 
+{{$NEXT}}
+    Switched to Dist::Zilla
+
 0.02	2010-03-23
 	Manifest generation moved to middleware constructor
 	Now handles streaming apps (like Plack:App::Proxy)
 	
 0.01    2010-03-22
-        First version, released on an unsuspecting world.
+    First version, released on an unsuspecting world.
 

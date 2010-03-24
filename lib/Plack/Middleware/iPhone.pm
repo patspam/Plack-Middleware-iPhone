@@ -1,11 +1,10 @@
 package Plack::Middleware::iPhone;
+# ABSTRACT: Make your html more iPhone friendly
 
 use warnings;
 use strict;
 use parent qw( Plack::Middleware );
 use Plack::Util::Accessor qw( manifest icon startup_image tidy viewport statusbar );
-
-our $VERSION = '0.01';
 
 sub new {
     my $class = shift;
@@ -124,10 +123,6 @@ sub write_manifest {
 
 __END__
 
-=head1 NAME
-
-Plack::Middleware::iPhone - Make your html more iPhone friendly
-
 =head1 SYNOPSIS
 
   # iPhone compatible directory listing..
@@ -162,19 +157,17 @@ mobile web apps you should be writing the HTML yourself.
 
 L<Building iPhone Apps with HTML, CSS, and JavaScript|http://building-iphone-apps.labs.oreilly.com>, Jonathan Stark (freely available).
 
-=head2 OPTIONS
-
-=head3 icon
+=attr icon
 
 A 57x57 image icon that the iPhone will display as a shortcut to your app if you add it to your Home Screen
 via the "Add to Home Screen" function.
 
-=head3 startup_image
+=attr startup_image
 
 A 320x460 PNG image that is displayed while your app is loading. If this is not set, the iPhone automatically
 uses a screenshot of the most recent app state.
 
-=head3 statusbar
+=attr statusbar
 
 Sets the C<apple-mobile-web-app-status-bar-style> meta tag, which controls the status bar appearance when yourself
 app is launched from a Home icon shortcut.
@@ -197,7 +190,7 @@ black-translucent
 
 =back
 
-=head3 viewport
+=attr viewport
 
 Sets the viewport meta tag, which determines how wide your iPhone thinks the screen is and scaling options. 
 
@@ -205,30 +198,16 @@ See
 L<Configuring the Viewport|http://developer.apple.com/safari/library/documentation/AppleApplications/Reference/SafariWebContent/UsingtheViewport/UsingtheViewport.html>
 for more information.
 
-=head3 manifest
+=attr manifest
 
 Automatically generates a manifest file for your application (with whatever name you pass in), and sets the 
 C<manifest> attribute on the html root tag, which triggers your iPhone to start using offline HTML Web App caching.
 
 See L<Going Offline|http://building-iphone-apps.labs.oreilly.com/ch06.html> for more information
 
-=head3 tidy 
+=attr tidy 
 
 Run the HTML through HTML::Tidy
-
-=head1 AUTHOR
-
-Patrick Donelan, C<< <pat at patspam.com> >>
-
-=head1 LICENSE AND COPYRIGHT
-
-Copyright 2010 Patrick Donelan.
-
-This program is free software; you can redistribute it and/or modify it
-under the terms of either: the GNU General Public License as published
-by the Free Software Foundation; or the Artistic License.
-
-See http://dev.perl.org/licenses/ for more information.
 
 =cut
 

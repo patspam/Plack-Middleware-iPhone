@@ -1,4 +1,5 @@
 package Plack::Middleware::iPhone;
+
 # ABSTRACT: Make your html more iPhone friendly
 
 use warnings;
@@ -8,8 +9,8 @@ use Plack::Util::Accessor qw( manifest icon startup_image tidy viewport statusba
 
 sub new {
     my $class = shift;
-    my $self = $class->SUPER::new(@_);
-    
+    my $self  = $class->SUPER::new(@_);
+
     $self->write_manifest if $self->manifest;
 
     return $self;
@@ -17,83 +18,91 @@ sub new {
 
 sub call {
     my $self = shift;
-    my $env = shift;
-    my $res = $self->app->($env);
-    
+    my $env  = shift;
+    my $res  = $self->app->($env);
+
     # Buffer the entire html response (surely there's a better way..)
     my $whole_response = '';
-    
-    $self->response_cb($res, sub {
-        my $res = shift;
-        my $h = Plack::Util::headers($res->[1]);
-        
-        if ($h->get('Content-Type') =~ m!^text/html!) {
-            return sub {
-                my $chunk = shift;
-                return unless defined $chunk;
-                
-                $whole_response .= $chunk;
-                if ($chunk =~ m{</html>}i) {
-                    return $self->filter($whole_response);
-                }
-            };
+
+    $self->response_cb(
+        $res,
+        sub {
+            my $res = shift;
+            my $h   = Plack::Util::headers( $res->[1] );
+
+            if ( $h->get('Content-Type') =~ m!^text/html! ) {
+                return sub {
+                    my $chunk = shift;
+                    return unless defined $chunk;
+
+                    $whole_response .= $chunk;
+                    if ( $chunk =~ m{</html>}i ) {
+                        return $self->filter($whole_response);
+                    }
+                };
+            }
         }
-    });
+    );
 }
 
 sub filter {
-    my $self = shift;
+    my $self  = shift;
     my $chunk = shift;
     require HTML::DOM;
     my $dom = new HTML::DOM or return $chunk;
     $dom->write($chunk);
     $dom->close;
-    
-    if (my $manifest = $self->manifest) {
-        $dom->documentElement->setAttribute('manifest', $manifest);
+
+    if ( my $manifest = $self->manifest ) {
+        $dom->documentElement->setAttribute( 'manifest', $manifest );
     }
-    
+
     my $head = $dom->getElementsByTagName('head')->[0];
     my @meta = (
         [ name => 'viewport', content => $self->viewport || 'width = device-width' ],
-        [ name => 'apple-mobile-web-app-capable', content => 'yes' ],
+        [ name => 'apple-mobile-web-app-capable',          content => 'yes' ],
         [ name => 'apple-mobile-web-app-status-bar-style', content => $self->statusbar || 'gray' ],
     );
     for my $attrs (@meta) {
         $head->appendChild( $self->el( $dom, 'meta', @$attrs ) );
     }
-    
+
     my %rel_links = map { $_->rel => 1 } $head->getElementsByTagName('link');
     my @links;
-    push @links, { rel => "apple-touch-icon", href => $self->icon } if $self->icon;
+    push @links, { rel => "apple-touch-icon",          href => $self->icon }          if $self->icon;
     push @links, { rel => "apple-touch-startup-image", href => $self->startup_image } if $self->startup_image;
-    
+
     for my $link_attrs (@links) {
         if ( $rel_links{ $link_attrs->{rel} } ) {
             warn "$link_attrs->{rel} link already exists";
-        } else {
+        }
+        else {
             $head->appendChild( $self->el( $dom, 'link', %$link_attrs ) );
         }
     }
-    
+
     my $html = $dom->innerHTML;
-    
-    if ($self->tidy) {
-        require HTML::Tidy;
-        my $tidy = HTML::Tidy->new( { output_html => 1, indent => 'auto',  tidy_mark => 'no' });
-        $html = $tidy->clean($html);
+
+    if ( $self->tidy ) {
+        require UNIVERSAL::require;
+        if ("HTML::Tidy"->require) {
+            my $tidy = HTML::Tidy->new( { output_html => 1, indent => 'auto', tidy_mark => 'no' } );
+            $html = $tidy->clean($html);
+        } else {
+            warn "HTML::Tidy not available"
+        }
     }
-    
+
     return $html;
 }
 
 sub el {
-    my $self = shift;
-    my $dom = shift;
-    my $type = shift;
+    my $self  = shift;
+    my $dom   = shift;
+    my $type  = shift;
     my @attrs = @_;
-    my $el = $dom->createElement($type);
-    while (my ($attr, $val) = splice @attrs, 0, 2) {
+    my $el    = $dom->createElement($type);
+    while ( my ( $attr, $val ) = splice @attrs, 0, 2 ) {
         $el->$attr($val);
     }
     return $el;
@@ -101,21 +110,22 @@ sub el {
 
 sub write_manifest {
     my $self = shift;
-    
+
     require Digest::MD5;
     require File::Slurp;
     my $manifest = $self->manifest;
-    
+
     # Write the manifest once, at compile time
     open my $fh, '>', $manifest or die "Unable to write manifest $manifest. $!";
     $fh->print("CACHE MANIFEST\n");
     for my $file (<*.*>) {
+
         # Don't put manifest or app.psgi in manifest file
         next if $file eq $manifest or $file =~ m/\.psgi$/;
-        
+
         # Write MD5 hash so that manifest changes whenever files change (auto cache updating)
         $fh->print("$file #");
-        $fh->print(Digest::MD5::md5_hex(File::Slurp::read_file($file)) . "\n");
+        $fh->print( Digest::MD5::md5_hex( File::Slurp::read_file($file) ) . "\n" );
     }
 }
 
@@ -149,7 +159,7 @@ __END__
 Plack::Middleware::iPhone does on-the-fly rewriting of any html content returned by your app (mostly just the head block) 
 to make it play nicer with iPhones. 
 
-This is a borderline ACME movile. For real 
+This is a borderline ACME module. For real 
 L<HTML5|http://www.quirksmode.org/blog/archives/2010/03/html5_apps.html>
 mobile web apps you should be writing the HTML yourself.
 
@@ -207,7 +217,7 @@ See L<Going Offline|http://building-iphone-apps.labs.oreilly.com/ch06.html> for 
 
 =attr tidy 
 
-Run the HTML through HTML::Tidy
+Run the HTML through L<HTML::Tidy>
 
 =cut
 

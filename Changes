@@ -1,6 +1,7 @@
 Revision history for Plack-Middleware-iPhone
 
 {{$NEXT}}
+    Fixed up HTML::Tidy dependency
 
 1.101110  2010-04-21 16:41:37 EST5EDT
     Made HTML::Tidy an optional dependency
